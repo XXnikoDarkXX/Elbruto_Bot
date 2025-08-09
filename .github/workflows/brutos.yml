@@ -1,0 +1,25 @@
+name: Ejecutar Brutos
+
+on:
+  workflow_dispatch:  # lanzarlo a mano
+  schedule:
+    - cron: "0 5 * * *"  # 07:00 en Madrid (verano). Ojo: esto es UTC.
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+      BRUTOS_JSON:        ${{ secrets.BRUTOS_JSON }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Ejecutar bot
+        run: python main.py
