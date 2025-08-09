@@ -58,9 +58,9 @@ class EternalTwinAuth:
         
         #print(f"Respuesta del login: ")
         #print(json.dumps(json_response, indent=4))
-        print(f"Cookies almacenadas después del login: {self.session.cookies.get_dict()}")
+        #print(f"Cookies almacenadas después del login: {self.session.cookies.get_dict()}")
         sid = self.session.cookies.get('sid')
-        print("SID: " + sid)        
+        #print("SID: " + sid)        
         return True
     
     """
