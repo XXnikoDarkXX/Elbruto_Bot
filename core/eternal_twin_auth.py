@@ -99,7 +99,7 @@ class EternalTwinAuth:
             return None
 
         print("Redirección exitosa.")
-        print("URL de redirección:", response_authorize.url)
+        #print("URL de redirección:", response_authorize.url)
         return response_authorize.url
 
     def extract_code(self, redirect_url):
@@ -118,7 +118,7 @@ class EternalTwinAuth:
             print("Token CSRF obtenido correctamente.")
             self.csrf_token = self.session.cookies.get("csrfToken")
             if self.csrf_token:
-                print(f"Token CSRF: {self.csrf_token}")
+                #print(f"Token CSRF: {self.csrf_token}")
                 self.get_token_before_percent()
                 return self.csrf_token
             else:
@@ -154,7 +154,7 @@ class EternalTwinAuth:
         json_response = response_token.json()
         self.connexion_token = json_response.get("connexionToken")
         if self.connexion_token:
-            print(f"Token de conexión: {self.connexion_token}")
+            #print(f"Token de conexión: {self.connexion_token}")
             return self.connexion_token
         return None
 
