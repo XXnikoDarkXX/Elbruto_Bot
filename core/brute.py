@@ -22,7 +22,7 @@ class Brute:
         self.currentTournamentDate = bruto_data.get('currentTournamentDate')
         self.tournaments = bruto_data.get('tournaments', [])
         self.inventory = bruto_data.get('inventory', [])
-
+        self.canRankUpSince=bruto_data.get('canRankUpSince')
         # 🔹 Guardar paths de decisiones
         self.destinyPath = bruto_data.get('destinyPath', [])
         self.previousDestinyPath = bruto_data.get('previousDestinyPath', [])

@@ -125,6 +125,8 @@ async def procesar_bruto(auth, bruto_name, subir_nivel_data, torneo):
     if not bruto.registeredForTournament and torneo == "True":
         random_sleep()
         bruto_manager.register_to_tournament()
+    if bruto.canRankUpSince is not None:
+        await notifier.enviar_mensaje("Puedes subir de rango para: "+bruto.name)
 
     # Subida inicial
     resolver_subida = await resolver_subida_nivel()
