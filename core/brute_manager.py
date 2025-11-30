@@ -13,70 +13,90 @@ class BrutoManager:
         self.brute=None
 
 
-    def get_opponents(self, bruto_id):
+    
+    def get_opponents(self, brute_name, level):
         """
         Obtiene la lista de oponentes de un bruto de la arena.
-        bruto_id: ID del bruto para obtener los oponentes.
+        brute_name: nombre del bruto (tal cual sale en el juego, respetando mayúsculas).
+        level: nivel del bruto (por defecto 30).
         """
         print("#-------------------------------------------#\n\n")
-        url_opponents = f"https://brute.eternaltwin.org/api/brute/{bruto_id}/get-opponents/27"
-        
+
+        # Mismo formato que en Chrome:
+        url_opponents = f"https://brute.eternaltwin.org/api/brute/{brute_name}/get-opponents/{level}"
+
         headers = {
             "Authorization": f"Basic {self.auth.base64_auth_string.strip()}",
-            "Content-Type": "application/json",
-            "x-csrf-token": self.auth.csrf_token,
             "Accept": "application/json",
             "Origin": "https://brute.eternaltwin.org",
-            "Referer": f"https://brute.eternaltwin.org/{bruto_id}/arena",
+            "Referer": f"https://brute.eternaltwin.org/{brute_name}/arena",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/134.0.0.0 Safari/537.36",
+            # SOLO la parte antes de %7C
+            "x-csrf-token": self.auth.token_before_percent,
         }
-        
-        cookies = self.auth.get_cookies()  # Usamos las cookies de la sesión activa
-        
+
+        # Usar la MISMA sesión que está autenticada
+        session = self.auth.session
+
+        print("Cookies en la sesión antes de get-opponents:", session.cookies.get_dict())
+
         try:
-            response = self.session.get(url_opponents, headers=headers, cookies=cookies)
-            response.raise_for_status()  # Lanza un error si el status code no es 200
-            opponents = response.json()  # Suponemos que la respuesta es en formato JSON
+            response = session.get(url_opponents, headers=headers)
+            print("Status:", response.status_code)
+            print("Body (primeros 300 chars):", response.text[:300])
+            response.raise_for_status()
+            opponents = response.json()
             print("Listado de oponentes obtenidos correctamente")
             return opponents
         except requests.exceptions.RequestException as e:
             print(f"Error al obtener los oponentes: {e}")
             return None
 
+
     
         
     def get_for_hook_info(self, bruto_name):
         """
-        Funcion para obtener informacion de un bruto
-        Realiza una solicitud GET a la URL 'for-hook' del bruto.
-        bruto_id: ID del bruto.
+        Función para obtener información de un bruto vía /for-hook
         """
         print("#-------------------------------------------#\n")
 
-        url_for_hook = f"https://elbruto.eternaltwin.org/api/brute/{bruto_name}/for-hook?"
+        # OJO: dominio correcto
+        url_for_hook = f"https://brute.eternaltwin.org/api/brute/{bruto_name}/for-hook"
 
-        # Agregamos los headers necesarios, incluyendo el csrf-token
         headers = {
             "Authorization": f"Basic {self.auth.base64_auth_string.strip()}",
-            "Content-Type": "application/json",
-            "x-csrf-token": self.auth.csrf_token,
             "Accept": "application/json",
-            "Origin": "https://elbruto.eternaltwin.org",
-            "Referer": f"https://elbruto.eternaltwin.org/{bruto_name}/cell",
+            "Origin": "https://brute.eternaltwin.org",
+            "Referer": f"https://brute.eternaltwin.org/{bruto_name}/cell",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/134.0.0.0 Safari/537.36",
+            # SOLO la parte antes de %7C
+            "x-csrf-token": self.auth.token_before_percent,
         }
 
-        # Usamos las cookies de la sesión activa
-        cookies = self.auth.get_cookies()
+        # Reusar la misma sesión que usaste para autenticar
+        session = self.auth.session
+
+        # Opcional: para depurar
+        print("Cookies en la sesión antes de /for-hook:", session.cookies.get_dict())
 
         try:
-            # Realizamos la solicitud GET
-            response = self.session.get(url_for_hook, headers=headers, cookies=cookies)
-            response.raise_for_status()  # Lanza un error si la respuesta no es 2xx
+            response = session.get(url_for_hook, headers=headers)
+            response.raise_for_status()
             print(f"Código de estado: {response.status_code}")
-            print(f"Obtenida la informacion del bruto {bruto_name}")
-            return response.json()  # Debería devolver un JSON con la respuesta
+            print(f"Obtenida la información del bruto {bruto_name}")
+            return response.json()
         except requests.exceptions.RequestException as e:
             print(f"Error al obtener la información de 'for-hook': {e}")
-            return None
+            print("Respuesta (si la hay):", getattr(e.response, "text", "")[:500])
+            return None        
+
+
+
         
     def fight(self, brute1, brute2):
         """

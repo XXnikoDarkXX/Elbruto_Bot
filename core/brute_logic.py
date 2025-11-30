@@ -140,7 +140,7 @@ async def procesar_bruto(auth, bruto_name, subir_nivel_data, torneo):
     contador_error = 0
     for i in range(combates):
         random_sleep()
-        opponents = bruto_manager.get_opponents(bruto_name)
+        opponents = bruto_manager.get_opponents(bruto_name, bruto.level)
         oponente = opponents[0]["name"]
         print(f"El oponente es: {oponente}")
         random_sleep()

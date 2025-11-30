@@ -112,20 +112,24 @@ class EternalTwinAuth:
 
     def get_csrf_token(self):
         print("#-------------------------------------------#\n")
-        url_csrf = "https://brute.eternaltwin.org/api/csrf?"
+        url_csrf = "https://brute.eternaltwin.org/api/csrf"
         response = self.session.get(url_csrf)
-        if response.status_code == 200 or response.status_code == 304:
+
+        if response.status_code in (200, 304):
             print("Token CSRF obtenido correctamente.")
             self.csrf_token = self.session.cookies.get("csrfToken")
             if self.csrf_token:
-                #print(f"Token CSRF: {self.csrf_token}")
-                self.get_token_before_percent()
+                print(f"Token CSRF (cookie): {self.csrf_token}")
+                # Parte antes de %7C
+                self.token_before_percent = self.csrf_token.split("%7C", 1)[0]
+                print(f"Token CSRF para header: {self.token_before_percent}")
                 return self.csrf_token
             else:
                 print("No se encontró el token CSRF en las cookies.")
         else:
             print(f"Error al obtener el token CSRF. Código de estado: {response.status_code}")
         return None
+
 
     def get_access_token(self, code):
         print("#----------------------------------------#\n")
@@ -136,27 +140,46 @@ class EternalTwinAuth:
         }
 
         headers_token = {
-            "Content-Type": "application/json",
             "Accept": "application/json",
             "Origin": "https://brute.eternaltwin.org",
             "Referer": f"https://brute.eternaltwin.org/oauth/callback?code={code}",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
-            "x-csrf-token": self.csrf_token,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/134.0.0.0 Safari/537.36",
+            "x-csrf-token": self.token_before_percent,
         }
 
         try:
+            print("Cookies actuales antes de pedir el token:", self.session.cookies.get_dict())
             response_token = self.session.get(url_token, params=params, headers=headers_token)
+            print("Status:", response_token.status_code)
+            print("Body (primeros 300 chars):", response_token.text[:300])
             response_token.raise_for_status()
         except requests.exceptions.RequestException as e:
             print(f"Error al obtener el token: {e}")
             return None
 
         json_response = response_token.json()
-        self.connexion_token = json_response.get("connexionToken")
+        # DEBUG opcional:
+        # import json as _json
+        # print(_json.dumps(json_response, indent=2))
+
+        user = json_response.get("user", {})
+        self.connexion_token = user.get("connexionToken")
+        # ya que estamos, actualizamos el user_id por si acaso:
+        if user.get("id"):
+            self.user_id = user["id"]
+
         if self.connexion_token:
-            #print(f"Token de conexión: {self.connexion_token}")
+            print(f"Token de conexión: {self.connexion_token}")
             return self.connexion_token
-        return None
+        else:
+            print("No se encontró connexionToken en la respuesta.")
+            return None
+
+
+
+
 
     def authenticate_user(self):
         print("#-------------------------------------------#\n")
